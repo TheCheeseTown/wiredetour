@@ -1,0 +1,13 @@
+// Identity of the app. Change BUNDLE_ID_PREFIX (e.g. io.github.<your-handle>)
+// and DEVELOPMENT_TEAM before running on a device. Bundle IDs can't change
+// after an App Store release (D18).
+BUNDLE_ID_PREFIX = io.github.thecheesetown
+DEVELOPMENT_TEAM =
+
+APP_BUNDLE_ID = $(BUNDLE_ID_PREFIX).app
+TUNNEL_BUNDLE_ID = $(APP_BUNDLE_ID).tunnel
+APP_GROUP_ID = group.$(BUNDLE_ID_PREFIX)
+KEYCHAIN_GROUP_SUFFIX = $(BUNDLE_ID_PREFIX).shared
+
+MARKETING_VERSION = 0.1.0
+CURRENT_PROJECT_VERSION = 1

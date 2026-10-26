@@ -1,0 +1,11 @@
+# Build output
+build/
+DerivedData/
+.build/
+*.xcuserstate
+xcuserdata/
+.swiftpm/
+
+# macOS
+.DS_Store
+wireDetour.xcodeproj/

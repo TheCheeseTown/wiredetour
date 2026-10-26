@@ -1,0 +1,91 @@
+# XcodeGen spec. Regenerate the project with `xcodegen generate`.
+name: wireDetour
+options:
+  bundleIdPrefix: io.github.thecheesetown
+  deploymentTarget:
+    iOS: "26.0"
+    macOS: "26.0"
+  createIntermediateGroups: true
+configFiles:
+  Debug: Config/Base.xcconfig
+  Release: Config/Base.xcconfig
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    DEAD_CODE_STRIPPING: YES
+
+packages:
+  WireDetourKit:
+    path: Packages/WireDetourKit
+
+aggregateTargets:
+  WireDetourCore:
+    settings:
+      SUPPORTED_PLATFORMS: "iphoneos iphonesimulator macosx"
+    buildScripts:
+      - name: Build Go core
+        script: '"$SRCROOT/scripts/build-core.sh"'
+        basedOnDependencyAnalysis: false
+
+targets:
+  wireDetour:
+    type: application
+    supportedDestinations: [iOS, macOS]
+    sources:
+      - path: App
+    dependencies:
+      - target: WireDetourTunnel
+      - package: WireDetourKit
+    settings:
+      base:
+        PRODUCT_NAME: wireDetour
+        PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID)
+        CODE_SIGN_ENTITLEMENTS: Config/App.entitlements
+        "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Config/App-macOS.entitlements
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: App/Info.plist
+        INFOPLIST_KEY_CFBundleDisplayName: wireDetour
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+        INFOPLIST_KEY_NSCameraUsageDescription: wireDetour uses the camera to scan WireGuard configuration QR codes.
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
+
+  WireDetourTunnel:
+    type: app-extension
+    supportedDestinations: [iOS, macOS]
+    sources:
+      - path: TunnelExtension
+    dependencies:
+      - target: WireDetourCore
+      - framework: build/WireDetourCore.xcframework
+        embed: false
+      - package: WireDetourKit
+    settings:
+      base:
+        PRODUCT_NAME: WireDetourTunnel
+        PRODUCT_BUNDLE_IDENTIFIER: $(TUNNEL_BUNDLE_ID)
+        CODE_SIGN_ENTITLEMENTS: Config/Tunnel.entitlements
+        "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Config/Tunnel-macOS.entitlements
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: TunnelExtension/Info.plist
+        INFOPLIST_KEY_CFBundleDisplayName: wireDetour Tunnel
+        SKIP_INSTALL: YES
+        OTHER_LDFLAGS: "$(inherited) -lresolv"
+
+schemes:
+  wireDetour:
+    build:
+      targets:
+        wireDetour: all
+    run:
+      config: Debug
+    test:
+      config: Debug

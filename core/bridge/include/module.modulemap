@@ -1,0 +1,5 @@
+module WireDetourCore {
+    header "wiredetour.h"
+    link "resolv"
+    export *
+}
