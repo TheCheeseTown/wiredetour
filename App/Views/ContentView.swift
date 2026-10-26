@@ -13,6 +13,11 @@ struct ContentView: View {
     @State private var showingScanner = false
     @State private var showingCreate = false
     @State private var showingHelp = false
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    #endif
+
+    private var isEmpty: Bool { tunnels.isLoaded && tunnels.tunnels.isEmpty }
 
     var body: some View {
         NavigationSplitView {
@@ -24,22 +29,18 @@ struct ContentView: View {
                         Button("Help", systemImage: "questionmark.circle") { showingHelp = true }
                     }
                 }
+                .navigationSplitViewColumnWidth(min: 220, ideal: 260)
+                #if os(iOS)
                 .overlay {
-                    if tunnels.isLoaded && tunnels.tunnels.isEmpty {
-                        ContentUnavailableView {
-                            Label("No Tunnels", systemImage: "arrow.triangle.branch")
-                        } description: {
-                            Text("Import a WireGuard configuration, then choose which domains take the detour through it.")
-                        } actions: {
-                            Button("Import from File") { showingImporter = true }
-                                .buttonStyle(.borderedProminent)
-                            Button("Create from Scratch") { showingCreate = true }
-                        }
-                    }
+                    // A compact width shows only the sidebar, so the empty state goes there.
+                    if isEmpty && sizeClass == .compact { emptyState }
                 }
+                #endif
         } detail: {
             if let item = tunnels.tunnels.first(where: { $0.id == selection }) {
                 TunnelDetailView(item: item)
+            } else if isEmpty {
+                emptyState
             } else {
                 Text("Select a tunnel")
                     .foregroundStyle(.secondary)
@@ -70,6 +71,18 @@ struct ContentView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(tunnels.lastError ?? "")
+        }
+    }
+
+    private var emptyState: some View {
+        ContentUnavailableView {
+            Label("No Tunnels", systemImage: "arrow.triangle.branch")
+        } description: {
+            Text("Import a WireGuard configuration, then choose which domains take the detour through it.")
+        } actions: {
+            Button("Import from File") { showingImporter = true }
+                .buttonStyle(.borderedProminent)
+            Button("Create from Scratch") { showingCreate = true }
         }
     }
 

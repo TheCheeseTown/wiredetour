@@ -19,18 +19,28 @@ struct WireDetourApp: App {
         #endif
     }
 
+    #if os(macOS)
+    /// D28: menu-bar-only on macOS (LSUIElement), so the single window opens
+    /// from the menu bar instead of at launch.
     private var mainWindow: some Scene {
-        let window = WindowGroup(id: "main") {
+        Window("wireDetour", id: "main") {
+            ContentView()
+                .environment(tunnels)
+                .frame(minWidth: 640, minHeight: 420)
+                .task { await tunnels.load() }
+        }
+        .defaultSize(width: 900, height: 620)
+        .defaultLaunchBehavior(.suppressed)
+    }
+    #else
+    private var mainWindow: some Scene {
+        WindowGroup(id: "main") {
             ContentView()
                 .environment(tunnels)
                 .task { await tunnels.load() }
         }
-        #if os(macOS)
-        return window.defaultSize(width: 900, height: 620)
-        #else
-        return window
-        #endif
     }
+    #endif
 }
 
 /// Turns imported files and scanned text into configurations (D14).

@@ -26,7 +26,7 @@ scripts/build-core.sh        # optional: Xcode runs this automatically
 open wireDetour.xcodeproj
 ```
 
-Before running on a device, set `DEVELOPMENT_TEAM` (and your own `BUNDLE_ID_PREFIX` if you fork) in `Config/Base.xcconfig`. A paid Apple Developer account is needed for the Network Extension capability, and the tunnel doesn't run in the iOS Simulator.
+Before running on a device, create `Config/Local.xcconfig` (untracked) containing `DEVELOPMENT_TEAM = <your team ID>`. Forks should also change `BUNDLE_ID_PREFIX` in `Config/Base.xcconfig`. A paid Apple Developer account is needed for the Network Extension capability, and the tunnel doesn't run in the iOS Simulator.
 
 Tests:
 

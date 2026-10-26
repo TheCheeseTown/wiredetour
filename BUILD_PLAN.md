@@ -92,6 +92,7 @@ This is your working agreement. Follow it every session.
 | D25 | **DNS interception design** (resolves R7/F3.0): the `.conf` DNS addresses themselves are the resolver addresses given to the OS (no virtual IP). The engine wraps wireguard-go's tun device, consumes UDP/53 packets to those addresses, and injects its own upstream queries straight into wireguard-go; replies are matched by source port. TCP/53 to those addresses is dropped and TC is cleared on answers. | No address collisions to manage, no netstack dependency, small code. TCP drop keeps the route hold watertight (D4, D20); clearing TC means clients never need TCP. |
 | D26 | **XcodeGen** (`project.yml`) generates the Xcode project; the `.xcodeproj` isn't committed. Go core is built by `scripts/build-core.sh` from an aggregate target. | Approved by user 2026-10-25. Reviewable diffs instead of pbxproj churn. |
 | D27 | **Logo**: an original two-headed dragon (white head = normal road, orange head = detour) on a navy/teal background. Explicitly **not** derived from the WireGuard dragon. | User asked for a WireGuard-dragon look-alike; declined because of the trademark (R10, D18) and App Store risk. Source: `assets/logo/*.svg`. |
+| D28 | macOS is **menu-bar-only**: no Dock icon (LSUIElement), single `Window` that opens from "Open wireDetour…", not at launch. Refines D22. | User request 2026-10-26: set-and-forget belongs in the menu bar; a Dock icon adds nothing. |
 
 ---
 
@@ -314,7 +315,7 @@ Every feature gets its `*Notes:*` filled when touched: files, decisions made, go
 - **Never delete.** Strike through obsolete content with a dated reason: `~~old text~~ (2026-11-03: replaced by D27 because …)`.
 - Every completed feature gets a filled `*Notes:*` line.
 - Deviations from a decision follow the contested-change protocol in §2.
-- New decisions get the next D-number (next: **D28**). Never renumber.
+- New decisions get the next D-number (next: **D29**). Never renumber.
 - New features get the next ID within their milestone. Never renumber.
 - Date-stamp substantial edits in §8.
 - New sections go after existing ones or as subsections; never renumber §0–§8.
@@ -338,3 +339,4 @@ Every feature gets its `*Notes:*` filled when touched: files, decisions made, go
 
 - **2026-10-25** — Document created from design interview (D1–D24). No code yet.
 - **2026-10-25** — M0–M4 implemented. Go engine + bridge (`go test -race` green), WireDetourKit (`swift test` green), app + extension build for macOS, iOS and iOS Simulator. Nothing verified on a device yet: needs `DEVELOPMENT_TEAM`. Added D25 (DNS interception), D26 (XcodeGen), D27 (original logo). Status `[~]` = built, awaiting on-device verification. M2/M3 effectively merged: the dynamic engine is always on.
+- **2026-10-26** — Signed macOS build runs (team ID kept in untracked `Config/Local.xcconfig`). Fixed the macOS layout: wider sidebar (min 220), the empty state moved to the detail pane (sidebar only on compact iOS), and a minimum window size. First real tunnel on macOS works: import → Keychain → connect; the only unscoped default route stays on the physical interface; the DNS host route and a dynamic /24 are added via utun; the extension uses about 16 MB RSS with no errors logged. iOS is still untested on a device. Added D28 (menu-bar-only on macOS).

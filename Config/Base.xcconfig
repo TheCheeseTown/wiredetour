@@ -1,6 +1,7 @@
-// Identity of the app. Change BUNDLE_ID_PREFIX (e.g. io.github.<your-handle>)
-// and DEVELOPMENT_TEAM before running on a device. Bundle IDs can't change
-// after an App Store release (D18).
+// Identity of the app. Forks change BUNDLE_ID_PREFIX (e.g. io.github.<your-handle>).
+// Bundle IDs can't change after an App Store release (D18).
+// DEVELOPMENT_TEAM goes in Config/Local.xcconfig (untracked), e.g.
+//   DEVELOPMENT_TEAM = ABCDE12345
 BUNDLE_ID_PREFIX = io.github.thecheesetown
 DEVELOPMENT_TEAM =
 
@@ -11,3 +12,5 @@ KEYCHAIN_GROUP_SUFFIX = $(BUNDLE_ID_PREFIX).shared
 
 MARKETING_VERSION = 0.1.0
 CURRENT_PROJECT_VERSION = 1
+
+#include? "Local.xcconfig"
