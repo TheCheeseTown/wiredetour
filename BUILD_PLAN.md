@@ -292,8 +292,8 @@ Every feature gets its `*Notes:*` filled when touched: files, decisions made, go
   *Notes:*
 - [ ] **F5.3** Trademark/name check, "uses the WireGuard® protocol" wording, third-party license notices (R10, D17).
   *Notes:*
-- [ ] **F5.4** TestFlight beta on all three platforms; fix-list.
-  *Notes:*
+- [~] **F5.4** TestFlight beta on all three platforms; fix-list.
+  *Notes:* 2026-11-18: App Store Connect record created (iOS + macOS, bundle ID `io.github.thecheesetown.app`; Xcode's auto-created App IDs are listed as "XC io github thecheesetown app[ tunnel]"). 0.1.0 (1) archived and uploaded for macOS and iOS via `xcodebuild archive` + `-exportArchive` (method `app-store-connect`, destination `upload`, automatic signing). Export compliance (`ITSAppUsesNonExemptEncryption`) left unset on purpose: the user answers it in App Store Connect. Archives were checked for personal info with `strings` (none; the Go core uses `-trimpath`). Warning from App Store Connect: from April 2027, uploads must use the iOS 27 SDK (Xcode 27). Bump `CURRENT_PROJECT_VERSION` in `Config/Base.xcconfig` before each new upload.
 - [ ] **F5.5** Public repo release, README with build instructions.
   *Notes:*
 
@@ -343,3 +343,4 @@ Every feature gets its `*Notes:*` filled when touched: files, decisions made, go
 - **2026-10-26** — Signed macOS build runs (team ID kept in untracked `Config/Local.xcconfig`). Fixed the macOS layout: wider sidebar (min 220), the empty state moved to the detail pane (sidebar only on compact iOS), and a minimum window size. First real tunnel on macOS works: import → Keychain → connect; the only unscoped default route stays on the physical interface; the DNS host route and a dynamic /24 are added via utun; the extension uses about 16 MB RSS with no errors logged. iOS is still untested on a device. Added D28 (menu-bar-only on macOS).
 - **2026-11-15** — Tracker brought up to date with the 2026-10-26 macOS run: added the ✓ macOS / ✓ iOS markers and recorded what's verified on macOS in F0.3, F1.2, F1.3, F1.5, F2.1, F2.2, F2.7, F3.0 and F3.7. Statuses unchanged, since every item also needs iOS. First iOS device build (iPhone 15 Pro): after the Program License Agreement was accepted and the phone was connected, it signs, installs and launches (see F0.3). First on-device tunnel test passed (user report): F0.3, F1.2, F2.1, F2.2 now `[x]`; F4.1 ✓ iOS. `go test` and `swift test` still green.
 - **2026-11-15** — Home Wi-Fi report (no NAT loopback → no handshake → matched domains fail closed, as designed). User chose: help entry (F4.4) + pull F6.4 into v1. Added `wdSetConfig` to the bridge, `endpointUpdateUAPI` to WireDetourKit and endpoint re-resolution on network change in the extension. `go test`, `swift test` (15) green; builds for iOS + macOS; installed on the iPhone.
+- **2026-11-18** — First TestFlight upload (0.1.0 build 1, macOS + iOS); see F5.4.
