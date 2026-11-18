@@ -158,6 +158,17 @@ PersistentKeepalive = 25
         #expect(uapi.hasPrefix("private_key="))
     }
 
+    @Test func endpointUpdateTouchesOnlyEndpoints() throws {
+        let c = try WgQuickFormat.parse(sample, name: "test")
+        #expect(c.endpointUpdateUAPI(resolvedEndpoints: [nil]) == nil)
+        let u = try #require(c.endpointUpdateUAPI(resolvedEndpoints: [Endpoint(host: "192.168.1.2", port: 51820)]))
+        #expect(u.hasPrefix("public_key="))
+        #expect(u.contains("update_only=true\nendpoint=192.168.1.2:51820\n"))
+        for forbidden in ["private_key", "replace_peers", "allowed_ip", "preshared_key", "persistent_keepalive"] {
+            #expect(!u.contains(forbidden))
+        }
+    }
+
     @Test func deviceSettingsRoundTrip() {
         var s = DeviceSettings()
         s.connectAutomatically = true

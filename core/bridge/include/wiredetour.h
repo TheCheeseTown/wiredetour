@@ -21,6 +21,8 @@ extern void wdTurnOff(int32_t handle);
 extern char *wdGetStatus(int32_t handle);
 extern char *wdTestDomain(int32_t handle, const char *domain);
 extern void wdBumpSockets(int32_t handle);
+// Applies a partial UAPI configuration to a running tunnel. Returns 0 on success.
+extern int32_t wdSetConfig(int32_t handle, const char *uapi_config);
 extern const char *wdVersion(void);
 
 #endif

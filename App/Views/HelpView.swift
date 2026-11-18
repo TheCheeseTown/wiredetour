@@ -16,6 +16,11 @@ struct HelpView: View {
                     Text("If the tunnel can't reach its DNS server or the peer is down, listed domains stop loading instead of silently using your normal connection. The Live section of the tunnel shows why.")
                     Text("Use **Test This Rule** on a connected tunnel to check where a domain's traffic goes.")
                 }
+                Section("Unreachable on your home Wi-Fi?") {
+                    Text("If your WireGuard server is on the same network you're connected to, and your configuration's Endpoint is your home's public address or a dynamic DNS name, many routers drop the traffic: they can't send it back into the network it came from. The tunnel then never connects, so listed domains stop loading while everything else works.")
+                    Text("**Fixes:** turn on “NAT loopback” (also called hairpin NAT or NAT reflection) in your router, or have your router's DNS answer the Endpoint name with the server's local address. wireDetour looks the Endpoint up again whenever your network changes.")
+                    Text("Or turn on **Connect Automatically** and add your home network under **Trusted Wi-Fi**, so the tunnel switches off at home.")
+                }
                 Section("Browsers with their own DNS") {
                     Text("Some browsers can bypass the system's DNS with “secure DNS” (DNS over HTTPS). Then wireDetour never sees the lookup and the site uses your normal connection.")
                     Text("**Firefox** turns its automatic secure DNS off by itself when wireDetour is connected.")

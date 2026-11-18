@@ -241,6 +241,21 @@ func wdBumpSockets(h C.int32_t) {
 	}()
 }
 
+//export wdSetConfig
+func wdSetConfig(h C.int32_t, uapi *C.char) C.int32_t {
+	t := lookup(h)
+	if t == nil {
+		return -1
+	}
+	// Partial update (e.g. new peer endpoints after a network change, F6.4).
+	if err := t.dev.IpcSet(C.GoString(uapi)); err != nil {
+		logf(1, "set config: %v", err)
+		return -2
+	}
+	t.dev.SendKeepalivesToPeersWithCurrentKeypair()
+	return 0
+}
+
 var versionCString = C.CString(version)
 
 //export wdVersion

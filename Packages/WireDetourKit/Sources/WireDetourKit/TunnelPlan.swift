@@ -75,4 +75,19 @@ extension TunnelConfiguration {
         }
         return lines.joined(separator: "\n") + "\n"
     }
+
+    /// A UAPI update that changes only peer endpoints (F6.4): no peer is
+    /// added, removed or otherwise touched. Peers whose `resolvedEndpoints`
+    /// entry is nil are skipped. Returns nil when there is nothing to set.
+    public func endpointUpdateUAPI(resolvedEndpoints: [Endpoint?]) -> String? {
+        var lines: [String] = []
+        for (i, peer) in peers.enumerated() {
+            guard i < resolvedEndpoints.count, let e = resolvedEndpoints[i],
+                  let pk = WireGuardKey.hex(peer.publicKey) else { continue }
+            lines.append("public_key=\(pk)")
+            lines.append("update_only=true")
+            lines.append("endpoint=\(e)")
+        }
+        return lines.isEmpty ? nil : lines.joined(separator: "\n") + "\n"
+    }
 }

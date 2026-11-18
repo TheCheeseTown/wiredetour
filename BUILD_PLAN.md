@@ -203,6 +203,7 @@ Facts gathered during the interview. Items marked *(verify)* were stated from me
 ## 5. Implementation Tracker — LIVING SECTION
 
 Statuses: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked (state unblock condition).
+Platform markers in notes: **✓ macOS** / **✓ iOS** = verified at runtime on that platform (with date). A feature is `[x]` only once verified on every platform it applies to. iPadOS runs the iOS binary, so ✓ iOS covers it except for iPad-specific layout.
 Every feature gets its `*Notes:*` filled when touched: files, decisions made, gotchas.
 
 ### M0 — Skeleton
@@ -210,8 +211,8 @@ Every feature gets its `*Notes:*` filled when touched: files, decisions made, go
   *Notes:* 2026-10-25. MIT LICENSE, README, .gitignore (generated `wireDetour.xcodeproj/` and `build/` are ignored; `project.yml` is the source per D26).
 - [x] **F0.2** Xcode multiplatform app target (iOS/iPadOS/macOS 26) + Packet Tunnel app-extension target; generic bundle IDs (D2, D18, D21).
   *Notes:* 2026-10-25. XcodeGen `project.yml`: multiplatform targets `wireDetour` (app) and `WireDetourTunnel` (app extension) via `supportedDestinations`. Identity in `Config/Base.xcconfig` (`BUNDLE_ID_PREFIX = io.github.thecheesetown`, set 2026-10-26). App icon from `assets/logo` (D27).
-- [~] **F0.3** Entitlements: Network Extension, App Group, Keychain sharing on both targets (R9).
-  *Notes:* Entitlement files in `Config/` (iOS + separate macOS ones with sandbox). Keychain group `$(AppIdentifierPrefix)$(BUNDLE_ID_PREFIX).shared` passed via Info.plist `WDKeychainAccessGroup`. `[!]` Runtime unverified: needs `DEVELOPMENT_TEAM` + paid account with Network Extension capability. Unsigned simulator run fails at Keychain add with "A required entitlement isn't present" — expected.
+- [x] **F0.3** Entitlements: Network Extension, App Group, Keychain sharing on both targets (R9).
+  *Notes:* Entitlement files in `Config/` (iOS + separate macOS ones with sandbox). Keychain group `$(AppIdentifierPrefix)$(BUNDLE_ID_PREFIX).shared` passed via Info.plist `WDKeychainAccessGroup`. Unsigned simulator run fails at Keychain add with "A required entitlement isn't present" — expected. **✓ macOS 2026-10-26** (signed build; team ID in untracked `Config/Local.xcconfig`). iOS 2026-11-15: signed Debug build installs and launches on an iPhone 15 Pro (`xcodebuild -allowProvisioningUpdates` + `xcrun devicectl device install/launch`). Earlier blockers resolved: Apple's updated Program License Agreement had to be accepted before profiles could be created ("PLA Update available"), and the phone had to be connected/unlocked for the developer disk image to mount. **✓ iOS 2026-11-15** (iPhone 15 Pro): user reported import → connect → listed domains go through the tunnel, unlisted traffic unaffected ("works great").
 - [x] **F0.4** Go core module (`core/`) with wireguard-go; build script producing an xcframework for iOS device, iOS simulator (compile-only) and macOS; Xcode build phase invokes it (D3).
   *Notes:* 2026-10-25. `scripts/build-core.sh` cross-compiles `core/bridge` (c-archive) for ios-arm64, ios-sim arm64+x86_64, macOS arm64+x86_64 → `build/WireDetourCore.xcframework` (~70 s cold, skipped when no .go/.h changed). Runs from aggregate target `WireDetourCore`, which the extension depends on. Headers + `module.modulemap` (module `WireDetourCore`) in `core/bridge/include`.
 - [x] **F0.5** Minimal C bridge: `wdTurnOn`/`wdTurnOff`/`wdGetStatus` callable from the extension (§3.4).
@@ -220,14 +221,14 @@ Every feature gets its `*Notes:*` filled when touched: files, decisions made, go
 ### M1 — Config & UI basics
 - [x] **F1.1** .conf parser/serializer incl. `#! SplitDNS.*` directives, round-trip of unknown lines, validation (§3.1, D9). Unit-tested.
   *Notes:* 2026-10-25. `WgQuickFormat` in WireDetourKit. Unknown sections/keys are errors (wg-quick parity); wg-quick-only keys (PostUp, Table…) and comments preserved; unknown `SplitDNS.*` directives preserved. Domains normalized (`*.`/trailing dot stripped). Tests: `swift test` (14 tests).
-- [~] **F1.2** Keychain storage of private/preshared keys, shared with extension (§3.2, D11).
-  *Notes:* `Keychain` stores the whole .conf (data-protection keychain, AfterFirstUnlockThisDeviceOnly); profile holds only `passwordReference`. Built for iOS/iPadOS/macOS; untested on device (needs signing, see F0.3).
+- [x] **F1.2** Keychain storage of private/preshared keys, shared with extension (§3.2, D11).
+  *Notes:* `Keychain` stores the whole .conf (data-protection keychain, AfterFirstUnlockThisDeviceOnly); profile holds only `passwordReference`. **✓ macOS 2026-10-26**: imported .conf stored in Keychain and read by the extension on connect. iOS pending (see F0.3). **✓ iOS 2026-11-15** (iPhone 15 Pro): user reported import → connect → listed domains go through the tunnel, unlisted traffic unaffected ("works great").
 - [~] **F1.3** Tunnel persistence via `NETunnelProviderManager` (load/save/delete) (§3.2).
-  *Notes:* `TunnelsManager` (App/TunnelsManager.swift). Filters `loadAllFromPreferences` by our providerBundleIdentifier — found in the simulator that other apps' VPN profiles are otherwise listed. Built for iOS/iPadOS/macOS; untested on device (needs signing, see F0.3).
+  *Notes:* `TunnelsManager` (App/TunnelsManager.swift). Filters `loadAllFromPreferences` by our providerBundleIdentifier — found in the simulator that other apps' VPN profiles are otherwise listed. **✓ macOS 2026-10-26**: save + load + start via the saved manager. Delete not explicitly recorded as tested. iOS pending (see F0.3).
 - [x] **F1.4** Tunnel list screen (shared iPhone/iPad/Mac window) with toggle per tunnel.
   *Notes:* 2026-10-25. NavigationSplitView list with per-row toggle, empty-state onboarding. Verified rendering in iOS 26.5 simulator.
 - [~] **F1.5** Import: Files picker, AirDrop/"Open in", Mac drag-drop (D14).
-  *Notes:* fileImporter, `.onOpenURL`, `.dropDestination`. Simulator: opening a .conf parses it and reaches save (fails only on missing entitlement). Duplicate names get " 2" suffix.
+  *Notes:* fileImporter, `.onOpenURL`, `.dropDestination`. Simulator: opening a .conf parses it and reaches save (fails only on missing entitlement). Duplicate names get " 2" suffix. **✓ macOS 2026-10-26**: import → save works (which entry point was used wasn't recorded; check Files picker, Open in and drag-drop separately). iOS pending (see F0.3).
 - [~] **F1.6** QR scan import on iOS/iPadOS (D14).
   *Notes:* VisionKit `DataScannerViewController`, accepts only payloads containing "[Interface]". Camera usage string set. Untested (needs device).
 - [~] **F1.7** Editor: friendly Domains + Networks lists (D15) and raw .conf text view; require DNS if missing (D6).
@@ -239,10 +240,10 @@ Every feature gets its `*Notes:*` filled when touched: files, decisions made, go
 
 ### M2 — Static tunnel  ★ DOGFOOD TARGET
 *At the end of M2 the app is genuinely usable for private domains/networks on your own devices.*
-- [~] **F2.1** Extension brings up wireguard-go on the utun fd (R12).
-  *Notes:* `TunnelDescriptor.find()` scans fds with getsockopt(SYSPROTO_CONTROL, UTUN_OPT_IFNAME) — avoids the ctl_info structs missing from the iOS SDK. Endpoint hostnames resolved in Swift (`EndpointResolver`, prefers IPv4). Built for iOS/iPadOS/macOS; untested on device (needs signing, see F0.3).
-- [~] **F2.2** Network settings per §3.3 static column: matchDomains = Domains + canary, includedRoutes = Networks + DNS /32; AllowedIPs used only as peer filter (D5, D7, D10).
-  *Notes:* `TunnelPlan` (tested) → `makeSettings`: matchDomains + canary, `matchDomainsNoSearch`, includedRoutes = Networks + DNS host routes + dynamic. Interface addresses use their own masks; no implicit routes added. Built for iOS/iPadOS/macOS; untested on device (needs signing, see F0.3).
+- [x] **F2.1** Extension brings up wireguard-go on the utun fd (R12).
+  *Notes:* `TunnelDescriptor.find()` scans fds with getsockopt(SYSPROTO_CONTROL, UTUN_OPT_IFNAME) — avoids the ctl_info structs missing from the iOS SDK. Endpoint hostnames resolved in Swift (`EndpointResolver`, prefers IPv4). **✓ macOS 2026-10-26**: tunnel connects; extension ~16 MB RSS, no errors logged. iOS pending (see F0.3). **✓ iOS 2026-11-15** (iPhone 15 Pro): user reported import → connect → listed domains go through the tunnel, unlisted traffic unaffected ("works great").
+- [x] **F2.2** Network settings per §3.3 static column: matchDomains = Domains + canary, includedRoutes = Networks + DNS /32; AllowedIPs used only as peer filter (D5, D7, D10).
+  *Notes:* `TunnelPlan` (tested) → `makeSettings`: matchDomains + canary, `matchDomainsNoSearch`, includedRoutes = Networks + DNS host routes + dynamic. Interface addresses use their own masks; no implicit routes added. **✓ macOS 2026-10-26**: the only unscoped default route stays on the physical interface; DNS host route and a dynamic /24 go via utun. iOS pending (see F0.3). **✓ iOS 2026-11-15** (iPhone 15 Pro): user reported import → connect → listed domains go through the tunnel, unlisted traffic unaffected ("works great").
 - [x] **F2.3** Canary handling for `use-application-dns.net` → NXDOMAIN (D7). (In M2 this may require the minimal resolver from F3.1 — if so, note it and pull F3.1 forward.)
   *Notes:* 2026-10-25. Pulled the resolver forward (F3.1), as anticipated: the engine answers the canary with NXDOMAIN locally. Go test `TestCanaryIsNXDOMAIN`.
 - [~] **F2.4** One active tunnel at a time (D13).
@@ -252,13 +253,13 @@ Every feature gets its `*Notes:*` filled when touched: files, decisions made, go
 - [~] **F2.6** Basic status: connected state, last handshake, bytes in/out.
   *Notes:* Handshake/bytes parsed from wireguard-go IpcGet in the bridge; shown in Live section, polled every 1 s while visible.
 - [~] **F2.7** macOS menu bar extra: status icon, tunnel toggles, "Open wireDetour…" (D22).
-  *Notes:* `MenuBarExtra` with per-tunnel toggles, "Open wireDetour…", Quit. Builds on macOS; not yet run.
+  *Notes:* `MenuBarExtra` with per-tunnel toggles, "Open wireDetour…", Quit. 2026-10-26: runs as the app's only entry point (D28: no Dock icon, window opens from "Open wireDetour…"). Status icon states and toggling from the menu not explicitly recorded as tested.
 - [~] **F2.8** Network-change handling (Wi-Fi ↔ cellular, sleep/wake): socket rebinding, tunnel survives.
   *Notes:* NWPathMonitor → `wdBumpSockets` (BindUpdate + keepalives, retried). TODO: re-resolve hostname endpoints after network changes (WireGuardKit does this for DNS64).
 
 ### M3 — Dynamic engine
 - [~] **F3.0** Spike: virtual resolver IP + packet interception approach (R7) and measure `setTunnelNetworkSettings` latency (R3). Record outcome as a new D-number.
-  *Notes:* Interception approach decided and implemented (D25). Still to do on device: measure setTunnelNetworkSettings latency (R3) and confirm re-applying settings mid-session doesn't disturb open connections.
+  *Notes:* Interception approach decided and implemented (D25). macOS 2026-10-26: a dynamic /24 was added mid-session (re-apply works), but latency wasn't measured. Still to do on device: measure setTunnelNetworkSettings latency (R3) and confirm re-applying settings mid-session doesn't disturb open connections.
 - [x] **F3.1** In-extension DNS server for matched domains; upstream = .conf DNS via tunnel (D6). UDP + TCP.
   *Notes:* 2026-10-25. `core/engine`: tun wrapper intercepts UDP/53 to the .conf DNS IPs; upstream queries injected into wireguard-go as crafted IPv4/IPv6 UDP packets from the tunnel address; replies matched by source port. TCP/53 to the DNS IPs is dropped (fail closed) and TC is cleared on answers. Tested with a fake OS tun + fake peer.
 - [x] **F3.2** Hold-then-answer: on A/AAAA answer, compute needed prefixes, apply routes via Swift callback, release answer only after success (D4).
@@ -272,17 +273,17 @@ Every feature gets its `*Notes:*` filled when touched: files, decisions made, go
 - [x] **F3.6** AllowedIPs warning when a resolved IP is outside the peer's AllowedIPs (D10).
   *Notes:* 2026-10-25. Per-domain warnings in status; also warns in editor when a Network is outside all AllowedIPs. Static-only engine mode (dynamicRoutes=false) warns when an IP is outside Networks — currently unused, the app always enables dynamic routes.
 - [!] **F3.7** Memory budget check under load (many domains, CDN-heavy sites) against extension limit (R4).
-  *Notes:* Needs a device. Unblock: signed build on an iPhone, run CDN-heavy sites, watch extension memory in Instruments (R4).
+  *Notes:* Needs a device. Unblock: signed build on an iPhone (see F0.3 for the current blockers), run CDN-heavy sites, watch extension memory in Instruments (R4). Baseline: ~16 MB RSS on macOS at idle with one dynamic route (2026-10-26), not under load.
 
 ### M4 — Visibility & control
 - [~] **F4.1** Live status view: matched domains → IPs → routes, warnings, failure reasons; RAM only, cleared on disconnect (D19).
-  *Notes:* `LiveStatusSection`: handshake, bytes, recent failures, matched domains → IPs/warnings, dynamic routes with domains + last use. Nothing persisted (D19); os_log never gets domain names.
+  *Notes:* `LiveStatusSection`: handshake, bytes, recent failures, matched domains → IPs/warnings, dynamic routes with domains + last use. Nothing persisted (D19); os_log never gets domain names. **✓ iOS 2026-11-15** (iPhone 15 Pro): user reported import → connect → listed domains go through the tunnel, unlisted traffic unaffected ("works great").
 - [~] **F4.2** "Test this rule" button: resolves the domain via the engine and reports whether traffic would/did go through the tunnel (D24, D7).
   *Notes:* Engine `TestDomain` (tested) resolves A (+AAAA with IPv6) through the normal path, so it installs routes like a real lookup, then reports viaTunnel / inAllowedIPs / last traffic per address. UI in `TestRuleSection`.
 - [~] **F4.3** Wi-Fi SSID rules (e.g. don't connect on trusted SSIDs) via on-demand rules; per-device setting (D24, §3.2).
-  *Notes:* Trusted Wi-Fi list (one SSID per entry, spaces allowed) shown when Connect Automatically is on → NEOnDemandRuleDisconnect(ssidMatch).
+  *Notes:* Trusted Wi-Fi list (one SSID per entry, spaces allowed) shown when Connect Automatically is on → NEOnDemandRuleDisconnect(ssidMatch). 2026-11-15 iOS field report: with a self-hosted server on the home LAN, the tunnel gets no handshake on home Wi-Fi when the router lacks NAT loopback (Endpoint = home public IP/DDNS), so matched domains fail closed (D20, working as designed). Trusted Wi-Fi is the in-app workaround, but it only covers on-demand; a manual toggle at home still fails.
 - [x] **F4.4** In-app help: Chrome Secure DNS note, what Domains/Networks mean, fail-closed explanation (D7, D20).
-  *Notes:* 2026-10-25. `HelpView`: how it works, fail-closed, Chrome Secure DNS steps, directive format, privacy.
+  *Notes:* 2026-10-25. `HelpView`: how it works, fail-closed, Chrome Secure DNS steps, directive format, privacy. 2026-11-15: added "Unreachable on your home Wi-Fi?" (NAT loopback, split-horizon DNS, Trusted Wi-Fi workaround) after the iOS field report (see F4.3).
 
 ### M5 — Ship v1
 - [ ] **F5.1** Privacy policy (no data collected; nothing leaves the device except tunnel traffic).
@@ -303,8 +304,8 @@ Every feature gets its `*Notes:*` filled when touched: files, decisions made, go
   *Notes:*
 - [ ] **F6.3** Tip jar (parked at D16).
   *Notes:*
-- [ ] **F6.4** Re-resolve hostname endpoints after network changes / DNS64 (found while building F2.8).
-  *Notes:*
+- [~] **F6.4** Re-resolve hostname endpoints after network changes / DNS64 (found while building F2.8). *Pulled into v1 by user 2026-11-15.*
+  *Notes:* 2026-11-15: more important than it looked. If the user fixes NAT loopback with split-horizon DNS (DDNS name → LAN IP at home), the endpoint resolved at start goes stale when moving Wi-Fi ↔ cellular, because `EndpointResolver` only runs in `startTunnel`. Implemented 2026-11-15: on each network change, after `wdBumpSockets`, `PacketTunnelProvider.refreshEndpoints` re-resolves hostname endpoints off the provider queue. Only peers whose address changed get pushed, via the new bridge call `wdSetConfig` (partial IpcSet + keepalives) with `TunnelConfiguration.endpointUpdateUAPI` (`update_only=true`, endpoint only; unit-tested). A failed lookup keeps the old address and retries 3× every 2 s. Builds for iOS + macOS and is installed on the iPhone; Wi-Fi ↔ cellular behaviour with split-horizon DNS still to be checked on device. Gotchas: (1) if the Endpoint's hostname is itself a listed Domain, the lookup goes through the tunnel's DNS and can't recover a dead tunnel, so don't list it; (2) DNS64/NAT64 synthesis isn't handled separately (getaddrinfo with AI_ADDRCONFIG covers the common case); (3) after a change to `wiredetour.h`, the first iOS device build failed with "cannot find 'wdSetConfig'" and a rebuild fixed it. Possible ordering race between the `WireDetourCore` aggregate target and the extension's Swift compile. TODO: investigate.
 - [ ] **F6.5** Unit tests for the app layer (TunnelsManager with a fake NE layer) and a Go test for the bridge's status JSON shape vs. Swift `LiveStatus`.
   *Notes:*
 
@@ -340,3 +341,5 @@ Every feature gets its `*Notes:*` filled when touched: files, decisions made, go
 - **2026-10-25** — Document created from design interview (D1–D24). No code yet.
 - **2026-10-25** — M0–M4 implemented. Go engine + bridge (`go test -race` green), WireDetourKit (`swift test` green), app + extension build for macOS, iOS and iOS Simulator. Nothing verified on a device yet: needs `DEVELOPMENT_TEAM`. Added D25 (DNS interception), D26 (XcodeGen), D27 (original logo). Status `[~]` = built, awaiting on-device verification. M2/M3 effectively merged: the dynamic engine is always on.
 - **2026-10-26** — Signed macOS build runs (team ID kept in untracked `Config/Local.xcconfig`). Fixed the macOS layout: wider sidebar (min 220), the empty state moved to the detail pane (sidebar only on compact iOS), and a minimum window size. First real tunnel on macOS works: import → Keychain → connect; the only unscoped default route stays on the physical interface; the DNS host route and a dynamic /24 are added via utun; the extension uses about 16 MB RSS with no errors logged. iOS is still untested on a device. Added D28 (menu-bar-only on macOS).
+- **2026-11-15** — Tracker brought up to date with the 2026-10-26 macOS run: added the ✓ macOS / ✓ iOS markers and recorded what's verified on macOS in F0.3, F1.2, F1.3, F1.5, F2.1, F2.2, F2.7, F3.0 and F3.7. Statuses unchanged, since every item also needs iOS. First iOS device build (iPhone 15 Pro): after the Program License Agreement was accepted and the phone was connected, it signs, installs and launches (see F0.3). First on-device tunnel test passed (user report): F0.3, F1.2, F2.1, F2.2 now `[x]`; F4.1 ✓ iOS. `go test` and `swift test` still green.
+- **2026-11-15** — Home Wi-Fi report (no NAT loopback → no handshake → matched domains fail closed, as designed). User chose: help entry (F4.4) + pull F6.4 into v1. Added `wdSetConfig` to the bridge, `endpointUpdateUAPI` to WireDetourKit and endpoint re-resolution on network change in the extension. `go test`, `swift test` (15) green; builds for iOS + macOS; installed on the iPhone.

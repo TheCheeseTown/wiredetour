@@ -30,6 +30,8 @@ final class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
     private let pathQueue = DispatchQueue(label: "wireDetour.path")
     private var handle: Int32 = 0
     private var plan: TunnelPlan?
+    private var config: TunnelConfiguration?
+    private var endpoints: [Endpoint?] = []
     private var remoteAddress = "127.0.0.1"
     private var pathMonitor: NWPathMonitor?
     private var lastPath: NWPath?
@@ -52,6 +54,8 @@ final class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
         let endpoints = config.peers.map { $0.endpoint.flatMap(EndpointResolver.resolve) }
         queue.sync {
             self.plan = plan
+            self.config = config
+            self.endpoints = endpoints
             self.remoteAddress = endpoints.compactMap { $0?.host }.first ?? "127.0.0.1"
         }
 
@@ -186,10 +190,55 @@ final class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
             if changed && h > 0 {
                 log.info("Network changed, rebinding sockets")
                 wdBumpSockets(h)
+                self.refreshEndpoints(attempt: 0)
             }
         }
         queue.sync { pathMonitor = monitor }
         monitor.start(queue: pathQueue)
+    }
+}
+
+extension PacketTunnelProvider {
+    /// Re-resolves hostname endpoints after a network change and pushes any
+    /// that changed to wireguard-go (F6.4). Needed when a DDNS name resolves
+    /// differently per network (split-horizon DNS at home) or changes while
+    /// the tunnel is up. A failed lookup keeps the old address; DNS on a new
+    /// path is often not ready yet, so it retries a few times.
+    fileprivate func refreshEndpoints(attempt: Int) {
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            guard let self else { return }
+            guard let (config, current) = self.queue.sync(execute: { self.config.map { ($0, self.endpoints) } }) else { return }
+            var updated = current
+            var unresolved = false
+            for (i, peer) in config.peers.enumerated() {
+                guard let endpoint = peer.endpoint, !isIPAddress(endpoint.host) else { continue }
+                if let r = EndpointResolver.resolve(endpoint) {
+                    if i < updated.count { updated[i] = r }
+                } else {
+                    unresolved = true
+                }
+            }
+            // Only peers whose address actually changed.
+            let changed = updated.enumerated().map { i, e in i < current.count && e != current[i] ? e : nil }
+            if changed.contains(where: { $0 != nil }), let uapi = config.endpointUpdateUAPI(resolvedEndpoints: changed) {
+                let h = self.queue.sync { self.handle }
+                guard h > 0 else { return }
+                if wdSetConfig(h, uapi) == 0 {
+                    self.queue.sync {
+                        self.endpoints = updated
+                        self.remoteAddress = updated.compactMap { $0?.host }.first ?? self.remoteAddress
+                    }
+                    log.info("Peer endpoint re-resolved after network change")
+                } else {
+                    log.error("Applying re-resolved endpoint failed")
+                }
+            }
+            if unresolved && attempt < 3 {
+                DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 2) { [weak self] in
+                    self?.refreshEndpoints(attempt: attempt + 1)
+                }
+            }
+        }
     }
 }
 
