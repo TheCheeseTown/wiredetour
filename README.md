@@ -11,7 +11,7 @@ Send **only the domains you choose** through a WireGuard® tunnel. Everything el
 
 ```ini
 #! SplitDNS.Domain = example.com
-#! SplitDNS.Route = 192.168.50.0/24
+#! SplitDNS.Route = 10.0.50.0/24
 ```
 
 No servers, no accounts, no logs. See [BUILD_PLAN.md](BUILD_PLAN.md) for the design decisions.

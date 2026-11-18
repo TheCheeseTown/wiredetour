@@ -110,7 +110,7 @@ DNS = 10.8.0.1
 #! SplitDNS.Domain = example.com
 #! SplitDNS.Domain = home.lan
 #! SplitDNS.Route = 10.0.0.0/24
-#! SplitDNS.Route = 192.168.50.0/24
+#! SplitDNS.Route = 10.0.50.0/24
 
 [Peer]
 PublicKey = <base64>
